@@ -575,7 +575,7 @@ async function analyzeFood(text){
     method:'POST',
     headers:{'Authorization':'Bearer '+OPENROUTER_KEY,'Content-Type':'application/json','HTTP-Referer':'https://mama-ernaehrung.app','X-Title':'Mama Ernaehrung'},
     body:JSON.stringify({
-      model:'deepseek/deepseek-v3-0324:free',
+      model:'deepseek/deepseek-v4-flash',
       messages:[{role:'user',content:`Analysiere folgende Lebensmittelangabe. Antworte NUR mit JSON (kein Markdown, keine Erklärung):\n{"calories":<kcal>,"protein":<g>,"carbs":<g>,"fat":<g>,"fiber":<g>}\n\nLebensmittel: "${text}"`}],
       temperature:0.1,max_tokens:120
     })
