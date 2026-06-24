@@ -1,0 +1,668 @@
+<!DOCTYPE html>
+<html lang="de">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Mamas Ernährungsplan</title>
+<link href="https://fonts.googleapis.com/css2?family=Lora:wght@400;500&family=Inter:wght@300;400;500&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --gd:#1a6b3c;--gm:#2d9a59;--gl:#e8f5ee;--gs:#f2faf5;
+  --am:#d4830a;--al:#fff8ec;
+  --td:#1c2b1e;--tm:#4a5e4f;--tl:#8a9e8f;
+  --br:#d4e5d9;--wh:#ffffff;--bg:#f7fbf8;
+  --red:#c0392b;--rl:#fdf3f2;
+  --blue:#2563eb;--bl:#dbeafe;
+  --pur:#7c3aed;--pl:#f3e8ff;
+  --teal:#0d9488;--tel:#ccfbf1;
+}
+body{font-family:'Inter',sans-serif;background:var(--bg);color:var(--td);min-height:100vh}
+header{background:var(--gd);color:white;padding:1.8rem 1.5rem 0.5rem;text-align:center}
+header h1{font-family:'Lora',serif;font-size:1.7rem;font-weight:400;letter-spacing:0.01em;margin-bottom:0.2rem}
+header p{font-size:0.82rem;opacity:0.7;font-weight:300;padding-bottom:1rem}
+.nav-tabs{background:var(--gd);display:flex;justify-content:center}
+.nav-tab{background:none;border:none;color:rgba(255,255,255,0.6);font-family:'Inter',sans-serif;font-size:0.82rem;font-weight:500;padding:0.7rem 1.6rem;cursor:pointer;border-bottom:2px solid transparent;transition:all 0.2s;letter-spacing:0.03em}
+.nav-tab.active{color:#fff;border-bottom-color:#fff}
+.nav-tab:hover:not(.active){color:rgba(255,255,255,0.85)}
+.container{max-width:680px;margin:0 auto;padding:1.5rem 1rem 4rem}
+.page{display:none}.page.active{display:block}
+.card{background:var(--wh);border:1px solid var(--br);border-radius:16px;padding:1.5rem;margin-bottom:1.25rem}
+.card-title{font-family:'Lora',serif;font-size:1.05rem;font-weight:400;color:var(--gd);margin-bottom:1rem;display:flex;align-items:center;gap:0.5rem}
+.card-title::before{content:'';display:inline-block;width:4px;height:18px;border-radius:2px;flex-shrink:0;background:var(--gm)}
+.ct-amber .card-title::before,.card-title.ct-amber::before{background:var(--am)}
+.card-title.ct-blue::before{background:var(--blue)}
+.card-title.ct-teal::before{background:var(--teal)}
+.card-title.ct-pur::before{background:var(--pur)}
+.kpi-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:0.75rem;margin-bottom:1.25rem}
+.kpi-box{background:var(--wh);border:1px solid var(--br);border-radius:14px;padding:1rem 1.1rem}
+.kpi-box.accent{background:var(--gd);border-color:var(--gd)}
+.klabel{font-size:0.68rem;text-transform:uppercase;letter-spacing:0.09em;color:var(--tl);margin-bottom:0.3rem}
+.kpi-box.accent .klabel{color:rgba(255,255,255,0.6)}
+.kval{font-size:1.45rem;font-weight:500;color:var(--td);line-height:1}
+.kpi-box.accent .kval{color:#fff}
+.kdiff{font-size:0.72rem;margin-top:0.2rem;font-weight:500}
+.kunit{font-size:0.72rem;color:var(--tl);margin-top:0.1rem}
+.kpi-box.accent .kunit{color:rgba(255,255,255,0.5)}
+.diff-pos{color:#16a34a}.diff-neg{color:var(--red)}.diff-neu{color:var(--tl)}
+.weight-row{display:flex;gap:0.75rem;align-items:center;margin-bottom:0.6rem}
+.weight-inp{border:1.5px solid var(--br);border-radius:10px;padding:0.65rem 1rem;font-family:'Inter',sans-serif;font-size:1.1rem;font-weight:500;color:var(--td);background:var(--bg);outline:none;width:130px;transition:border-color 0.2s}
+.weight-inp:focus{border-color:var(--gm);background:white}
+.weight-unit{font-size:0.88rem;color:var(--tl);margin-left:-0.3rem}
+.save-btn{background:var(--gd);color:white;border:none;border-radius:10px;padding:0.65rem 1.2rem;font-family:'Inter',sans-serif;font-size:0.88rem;font-weight:500;cursor:pointer;transition:background 0.2s,transform 0.1s;white-space:nowrap}
+.save-btn:hover{background:var(--gm)}.save-btn:active{transform:scale(0.97)}.save-btn:disabled{background:var(--tl);cursor:not-allowed}
+.weight-hint{font-size:0.75rem;color:var(--tl);line-height:1.5}
+.weight-success{font-size:0.78rem;color:#16a34a;margin-top:0.4rem;min-height:1.2em}
+.chart-wrap{position:relative;height:220px;margin-top:0.5rem}
+.chart-tabs{display:flex;gap:0.4rem;margin-bottom:0.75rem;flex-wrap:wrap}
+.chart-tab{background:var(--gs);border:1px solid var(--br);border-radius:20px;padding:0.3rem 0.85rem;font-size:0.75rem;font-weight:500;color:var(--tm);cursor:pointer;transition:all 0.15s;border:none}
+.chart-tab.active{background:var(--gd);color:white}
+.stats-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:0.75rem}
+.stat-box{background:var(--gs);border-radius:10px;padding:0.85rem 1rem}
+.stat-box.hl{background:var(--gd)}
+.stat-box .label{font-size:0.7rem;text-transform:uppercase;letter-spacing:0.08em;color:var(--tl);margin-bottom:0.2rem}
+.stat-box.hl .label{color:rgba(255,255,255,0.6)}
+.stat-box .value{font-size:1.45rem;font-weight:500;color:var(--td);line-height:1}
+.stat-box.hl .value{color:white}
+.stat-box .unit{font-size:0.72rem;color:var(--tl);margin-top:0.1rem}
+.stat-box.hl .unit{color:rgba(255,255,255,0.5)}
+.macro-bars{display:flex;flex-direction:column;gap:0.85rem}
+.macro-row{display:flex;flex-direction:column;gap:0.3rem}
+.macro-header{display:flex;justify-content:space-between;font-size:0.82rem}
+.macro-name{color:var(--tm);font-weight:500}.macro-val{color:var(--td)}
+.bar-track{height:8px;background:var(--gl);border-radius:4px;overflow:hidden}
+.bar-fill{height:100%;border-radius:4px;transition:width 0.5s ease}
+.bar-kcal{background:var(--gd)}.bar-protein{background:var(--blue)}.bar-carbs{background:var(--am)}.bar-fat{background:var(--pur)}.bar-fiber{background:var(--teal)}
+.kcal-warn{margin-top:0.5rem;font-size:0.78rem;color:var(--red);background:var(--rl);border-radius:8px;padding:0.4rem 0.75rem;display:none}
+.input-row{display:flex;gap:0.75rem;align-items:stretch}
+.food-input{flex:1;border:1.5px solid var(--br);border-radius:10px;padding:0.75rem 1rem;font-family:'Inter',sans-serif;font-size:0.92rem;color:var(--td);background:var(--bg);transition:border-color 0.2s;outline:none}
+.food-input:focus{border-color:var(--gm);background:white}
+.food-input::placeholder{color:var(--tl)}
+.add-btn{background:var(--gd);color:white;border:none;border-radius:10px;padding:0 1.25rem;font-family:'Inter',sans-serif;font-size:0.88rem;font-weight:500;cursor:pointer;transition:background 0.2s,transform 0.1s;white-space:nowrap;min-width:80px;display:flex;align-items:center;justify-content:center}
+.add-btn:hover{background:var(--gm)}.add-btn:active{transform:scale(0.97)}.add-btn:disabled{background:var(--tl);cursor:not-allowed}
+.loading-hint{margin-top:0.6rem;font-size:0.78rem;color:var(--tl);min-height:1.2em;display:flex;align-items:center;gap:0.4rem}
+.spinner{width:12px;height:12px;border:2px solid var(--br);border-top-color:var(--gm);border-radius:50%;animation:spin 0.7s linear infinite;display:none}
+@keyframes spin{to{transform:rotate(360deg)}}
+.error-msg{margin-top:0.5rem;font-size:0.78rem;color:var(--red);min-height:1.2em}
+.entry-item{display:flex;align-items:flex-start;gap:0.75rem;padding:0.85rem 0;border-bottom:1px solid var(--br)}
+.entry-item:last-child{border-bottom:none;padding-bottom:0}
+.entry-icon{width:34px;height:34px;background:var(--gl);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:1rem;flex-shrink:0;margin-top:1px}
+.entry-body{flex:1}
+.entry-desc{font-size:0.9rem;font-weight:500;color:var(--td);margin-bottom:0.3rem}
+.entry-macros{display:flex;flex-wrap:wrap;gap:0.35rem}
+.macro-pill{font-size:0.7rem;border-radius:20px;padding:0.15rem 0.55rem;font-weight:500}
+.pill-kcal{background:var(--gl);color:var(--gd)}.pill-protein{background:var(--bl);color:#1d4ed8}.pill-carbs{background:var(--al);color:#92400e}.pill-fat{background:var(--pl);color:#6b21a8}.pill-fiber{background:var(--tel);color:#0f766e}
+.entry-delete{background:none;border:none;cursor:pointer;color:var(--tl);font-size:1rem;padding:0.2rem;line-height:1;transition:color 0.2s;flex-shrink:0}
+.entry-delete:hover{color:var(--red)}
+.empty-state{text-align:center;padding:2rem 0 1rem;color:var(--tl);font-size:0.88rem}
+.empty-state .leaf{font-size:2rem;margin-bottom:0.5rem;opacity:0.4}
+.config-banner{background:var(--al);border:1px solid #f6d89a;border-radius:12px;padding:0.85rem 1rem;margin-bottom:1.25rem;font-size:0.82rem;color:var(--am);display:none;align-items:center;gap:0.5rem}
+.date-badge{font-size:0.72rem;background:var(--gl);color:var(--gd);border-radius:20px;padding:0.2rem 0.6rem;font-weight:500}
+.entries-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:1rem}
+.wh-item{display:flex;justify-content:space-between;align-items:center;padding:0.6rem 0;border-bottom:1px solid var(--br);font-size:0.88rem}
+.wh-item:last-child{border-bottom:none}
+.wh-date{color:var(--tm)}.wh-kg{font-weight:500;color:var(--td)}
+.wh-diff-pos{color:#16a34a;font-size:0.78rem}.wh-diff-neg{color:var(--red);font-size:0.78rem}.wh-diff-neu{color:var(--tl);font-size:0.78rem}
+@media(max-width:480px){
+  header h1{font-size:1.35rem}
+  .nav-tab{font-size:0.78rem;padding:0.65rem 1.1rem;letter-spacing:0}
+  .container{padding:1rem 0.75rem 5rem}
+  .card{padding:1.1rem;border-radius:14px}
+  .kpi-grid{gap:0.5rem}
+  .kpi-box{padding:0.85rem 0.9rem}
+  .kval{font-size:1.25rem}
+  .klabel{font-size:0.65rem}
+  .food-input{font-size:1rem;padding:0.85rem 0.9rem}
+  .add-btn{padding:0 1rem;font-size:0.85rem;min-width:72px}
+  .weight-inp{width:110px;font-size:1rem}
+  .chart-wrap{height:190px}
+  .stats-grid{gap:0.5rem}
+  .stat-box{padding:0.75rem 0.85rem}
+  .macro-pill{font-size:0.68rem}
+  .chart-tab{padding:0.28rem 0.7rem;font-size:0.72rem}
+  .entry-icon{width:30px;height:30px;font-size:0.9rem}
+  .entry-desc{font-size:0.85rem}
+}
+@media(min-width:768px){
+  .container{padding:2rem 1.5rem 4rem}
+  header h1{font-size:2rem}
+  header p{font-size:0.9rem}
+  .nav-tab{font-size:0.9rem;padding:0.85rem 2.2rem}
+  .card{padding:1.75rem}
+  .kpi-grid{grid-template-columns:repeat(4,1fr)}
+  .chart-wrap{height:260px}
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>🌿 Mamas Ernährungsplan</h1>
+  <p>Kalorienzähler · Gewichtsverlauf · KI-gestützt</p>
+</header>
+
+<div class="nav-tabs">
+  <button class="nav-tab active" id="tab-heute" onclick="switchPage('heute',this)">Heute</button>
+  <button class="nav-tab" id="tab-verlauf" onclick="switchPage('verlauf',this)">Verlauf</button>
+  <button class="nav-tab" id="tab-gewicht" onclick="switchPage('gewicht',this)">Gewicht</button>
+</div>
+
+<div class="container">
+
+  <div class="config-banner" id="configBanner">
+    ⚠️ OpenRouter API-Key fehlt — bitte in der HTML-Datei bei <code>OPENROUTER_KEY</code> eintragen.
+  </div>
+
+  <!-- PAGE: HEUTE -->
+  <div class="page active" id="page-heute">
+
+    <div class="card">
+      <div class="card-title" style="--ct-color:var(--am)">Heute im Überblick</div>
+      <div class="macro-bars">
+        <div class="macro-row">
+          <div class="macro-header">
+            <span class="macro-name">Kalorien</span>
+            <span class="macro-val"><span id="pKcal">0</span> / <span id="pZiel">—</span> kcal</span>
+          </div>
+          <div class="bar-track"><div class="bar-fill bar-kcal" id="barKcal" style="width:0%"></div></div>
+          <div class="kcal-warn" id="kcalWarning"></div>
+        </div>
+        <div class="macro-row">
+          <div class="macro-header"><span class="macro-name">Eiweiß</span><span class="macro-val"><span id="pProtein">0</span> g</span></div>
+          <div class="bar-track"><div class="bar-fill bar-protein" id="barProtein" style="width:0%"></div></div>
+        </div>
+        <div class="macro-row">
+          <div class="macro-header"><span class="macro-name">Kohlenhydrate</span><span class="macro-val"><span id="pCarbs">0</span> g</span></div>
+          <div class="bar-track"><div class="bar-fill bar-carbs" id="barCarbs" style="width:0%"></div></div>
+        </div>
+        <div class="macro-row">
+          <div class="macro-header"><span class="macro-name">Fett</span><span class="macro-val"><span id="pFat">0</span> g</span></div>
+          <div class="bar-track"><div class="bar-fill bar-fat" id="barFat" style="width:0%"></div></div>
+        </div>
+        <div class="macro-row">
+          <div class="macro-header"><span class="macro-name">Ballaststoffe</span><span class="macro-val"><span id="pFiber">0</span> g</span></div>
+          <div class="bar-track"><div class="bar-fill bar-fiber" id="barFiber" style="width:0%"></div></div>
+        </div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Mahlzeit eintragen</div>
+      <div class="input-row">
+        <input class="food-input" id="foodInput" type="text" placeholder="z. B. 2 Eier mit Speck, 1 Banane …" autocomplete="off">
+        <button class="add-btn" id="addBtn" onclick="addEntry()">+ Eintragen</button>
+      </div>
+      <div class="loading-hint">
+        <div class="spinner" id="spinner"></div>
+        <span id="hintText">KI analysiert Nährwerte automatisch</span>
+      </div>
+      <div class="error-msg" id="errorMsg"></div>
+    </div>
+
+    <div class="card">
+      <div class="entries-header">
+        <div style="font-family:'Lora',serif;font-size:1.05rem;font-weight:400;color:var(--gd);display:flex;align-items:center;gap:0.5rem">
+          <span style="width:4px;height:18px;background:var(--gm);border-radius:2px;display:inline-block"></span>
+          Heutige Mahlzeiten
+        </div>
+        <span class="date-badge" id="dateBadge"></span>
+      </div>
+      <div id="entriesList">
+        <div class="empty-state"><div class="leaf">🥗</div><p>Noch keine Einträge heute.</p></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- PAGE: VERLAUF -->
+  <div class="page" id="page-verlauf">
+
+    <div class="kpi-grid">
+      <div class="kpi-box accent">
+        <div class="klabel">Aktuelles Gewicht</div>
+        <div class="kval" id="kpiAkt">—</div>
+        <div class="kunit">kg</div>
+      </div>
+      <div class="kpi-box">
+        <div class="klabel">Veränderung seit Start</div>
+        <div class="kval" id="kpiTotal">—</div>
+        <div class="kdiff" id="kpiTotalDiff"></div>
+        <div class="kunit">kg</div>
+      </div>
+      <div class="kpi-box">
+        <div class="klabel">Diese Woche</div>
+        <div class="kval" id="kpiWeek">—</div>
+        <div class="kdiff" id="kpiWeekDiff"></div>
+        <div class="kunit">kg</div>
+      </div>
+      <div class="kpi-box">
+        <div class="klabel">Ø Kalorien (7 Tage)</div>
+        <div class="kval" id="kpiAvgKcal">—</div>
+        <div class="kunit">kcal/Tag</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Verlauf</div>
+      <div class="chart-tabs" id="modeTabs">
+        <button class="chart-tab active" onclick="setMode('gewicht',this)">Gewicht</button>
+        <button class="chart-tab" onclick="setMode('kcal',this)">Kalorien</button>
+        <button class="chart-tab" onclick="setMode('beide',this)">Beides</button>
+      </div>
+      <div class="chart-tabs" id="rangeTabs">
+        <button class="chart-tab active" onclick="setRange(7,this)">7 Tage</button>
+        <button class="chart-tab" onclick="setRange(14,this)">2 Wochen</button>
+        <button class="chart-tab" onclick="setRange(30,this)">30 Tage</button>
+        <button class="chart-tab" onclick="setRange(90,this)">90 Tage</button>
+      </div>
+      <div class="chart-wrap"><canvas id="mainChart"></canvas></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Letzte Messungen</div>
+      <div id="weightHistoryList">
+        <div class="empty-state"><div class="leaf">⚖️</div><p>Noch keine Gewichtsdaten.</p></div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- PAGE: GEWICHT -->
+  <div class="page" id="page-gewicht">
+
+    <div class="card">
+      <div class="card-title">Morgens wiegen</div>
+      <p style="font-size:0.82rem;color:var(--tm);margin-bottom:1rem;line-height:1.6">
+        Jeden Morgen nüchtern wiegen — am genauesten vor dem Frühstück.<br>
+        <strong id="weightDateLabel"></strong>
+      </p>
+      <div class="weight-row">
+        <input class="weight-inp" id="weightInput" type="number" step="0.1" min="30" max="300" placeholder="72.5">
+        <span class="weight-unit">kg</span>
+        <button class="save-btn" id="weightSaveBtn" onclick="saveWeight()">Speichern</button>
+      </div>
+      <div class="weight-hint">Tipp: Punkt oder Komma für Dezimalstellen — z. B. 72.4</div>
+      <div class="weight-success" id="weightSuccess"></div>
+    </div>
+
+    <div class="kpi-grid">
+      <div class="kpi-box accent">
+        <div class="klabel">Letztes Gewicht</div>
+        <div class="kval" id="wKpiAkt">—</div>
+        <div class="kunit">kg</div>
+      </div>
+      <div class="kpi-box">
+        <div class="klabel">vs. vorherige Messung</div>
+        <div class="kval" id="wKpiYest">—</div>
+        <div class="kdiff" id="wKpiYestDiff"></div>
+        <div class="kunit">kg</div>
+      </div>
+      <div class="kpi-box">
+        <div class="klabel">Abgenommen gesamt</div>
+        <div class="kval" id="wKpiTotal">—</div>
+        <div class="kunit">kg seit Start</div>
+      </div>
+      <div class="kpi-box">
+        <div class="klabel">Ziel (−5 kg)</div>
+        <div class="kval" id="wKpiZiel">68.0</div>
+        <div class="kunit">kg</div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Gewichtskurve</div>
+      <div class="chart-wrap"><canvas id="weightChartSmall"></canvas></div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">Alle Messungen</div>
+      <div id="weightFullList">
+        <div class="empty-state"><div class="leaf">⚖️</div><p>Noch keine Messungen.</p></div>
+      </div>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+const OPENROUTER_KEY = 'DEIN_OPENROUTER_API_KEY_HIER';
+const SB_URL  = 'https://rriernloikzahjxzhegb.supabase.co';
+const SB_ANON = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJyaWVybmxvaWt6YWhqeHpoZWdiIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzQ4NzcwNzgsImV4cCI6MjA5MDQ1MzA3OH0.AnH9_ReKvfrBxPk36wyDh1tUf-tn28rS6lZf2v9wexc';
+
+const ZIEL = 1400;
+
+const today = new Date().toISOString().split('T')[0];
+let entries = [], weightData = [], kcalHistory = [];
+let chartMode = 'gewicht', chartRange = 7;
+let mainChartObj = null, smallChartObj = null;
+
+// init static
+el('pZiel').textContent   = ZIEL.toLocaleString('de-DE');
+el('wKpiZiel').textContent = (73-5).toFixed(1);
+el('dateBadge').textContent = new Date().toLocaleDateString('de-DE',{weekday:'short',day:'numeric',month:'long'});
+el('weightDateLabel').textContent = new Date().toLocaleDateString('de-DE',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+if (OPENROUTER_KEY === 'DEIN_OPENROUTER_API_KEY_HIER') el('configBanner').style.display = 'flex';
+
+function el(id){ return document.getElementById(id); }
+function set(id,v){ const e=el(id); if(e) e.textContent=v; }
+function esc(s){ return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+function switchPage(id, btn) {
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t=>t.classList.remove('active'));
+  el('page-'+id).classList.add('active');
+  btn.classList.add('active');
+  if(id==='verlauf'){ buildMainChart(); renderWeightHistory(); updateKPIs(); }
+  if(id==='gewicht'){ buildSmallChart(); renderWeightFull(); }
+}
+
+/* ── SUPABASE ── */
+async function sb(path, opts={}) {
+  const r = await fetch(SB_URL+'/rest/v1/'+path, {
+    ...opts,
+    headers:{ 'apikey':SB_ANON,'Authorization':'Bearer '+SB_ANON,'Content-Type':'application/json','Prefer':'return=representation',...(opts.headers||{}) }
+  });
+  if(!r.ok){ throw new Error(await r.text()); }
+  const t = await r.text();
+  return t ? JSON.parse(t) : [];
+}
+
+/* ── LOAD ── */
+async function loadAll() {
+  await Promise.all([loadEntries(), loadWeights(), loadKcalHistory()]);
+  updateKPIs();
+}
+
+async function loadEntries() {
+  try {
+    entries = await sb(`nutrition_entries?entry_date=eq.${today}&order=created_at.asc`);
+    renderEntries(); updateProgress();
+  } catch(e){ console.error(e); }
+}
+
+async function loadWeights() {
+  try {
+    const d = await sb(`weight_entries?order=entry_date.desc&limit=90`);
+    weightData = d.reverse();
+    updateWeightKPIs();
+  } catch(e){ console.error(e); }
+}
+
+async function loadKcalHistory() {
+  try {
+    kcalHistory = await sb(`daily_kcal_summary?order=summary_date.asc&limit=90`);
+  } catch(e){ console.error(e); }
+}
+
+async function syncKcal() {
+  const total = entries.reduce((s,e)=>s+(e.calories||0),0);
+  try {
+    await sb(`daily_kcal_summary?summary_date=eq.${today}`,{method:'DELETE',headers:{'Prefer':''}});
+    if(total>0) await sb('daily_kcal_summary',{method:'POST',body:JSON.stringify({summary_date:today,total_kcal:Math.round(total)})});
+    await loadKcalHistory();
+    updateKPIs();
+  } catch(e){ console.error(e); }
+}
+
+/* ── WEIGHT SAVE ── */
+async function saveWeight() {
+  const raw = el('weightInput').value.replace(',','.');
+  const val = parseFloat(raw);
+  const msg = el('weightSuccess');
+  if(!val||val<30||val>300){
+    msg.style.color='var(--red)'; msg.textContent='⚠️ Bitte ein gültiges Gewicht eingeben.'; return;
+  }
+  const btn = el('weightSaveBtn');
+  btn.disabled=true; btn.textContent='…';
+  try {
+    await sb(`weight_entries?entry_date=eq.${today}`,{method:'DELETE',headers:{'Prefer':''}});
+    await sb('weight_entries',{method:'POST',body:JSON.stringify({entry_date:today,weight_kg:val})});
+    el('weightInput').value='';
+    msg.style.color='#16a34a'; msg.textContent=`✓ ${val.toFixed(1)} kg gespeichert!`;
+    setTimeout(()=>msg.textContent='',3000);
+    await loadWeights();
+    updateKPIs(); buildSmallChart(); renderWeightFull();
+  } catch(e){ msg.style.color='var(--red)'; msg.textContent='Fehler: '+e.message; }
+  btn.disabled=false; btn.textContent='Speichern';
+}
+
+/* ── KPIs ── */
+function updateKPIs() { updateWeightKPIs(); updateAvgKcal(); }
+
+function updateWeightKPIs() {
+  if(!weightData.length) return;
+  const lat = weightData[weightData.length-1];
+  const fst = weightData[0];
+  const diff = parseFloat((lat.weight_kg - fst.weight_kg).toFixed(1));
+  const ds = (diff>0?'+':'')+diff;
+  const cls = diff<0?'diff-neg':diff>0?'diff-pos':'diff-neu';
+
+  // Verlauf
+  set('kpiAkt', lat.weight_kg.toFixed(1));
+  set('kpiTotal', Math.abs(diff).toFixed(1));
+  el('kpiTotalDiff').textContent = ds+' kg seit Start';
+  el('kpiTotalDiff').className = 'kdiff '+cls;
+
+  const wAgo = new Date(); wAgo.setDate(wAgo.getDate()-7);
+  const wStr = wAgo.toISOString().split('T')[0];
+  const wk = weightData.find(w=>w.entry_date>=wStr);
+  if(wk){
+    const wd = parseFloat((lat.weight_kg-wk.weight_kg).toFixed(1));
+    set('kpiWeek', (wd>0?'+':'')+wd.toFixed(1));
+    el('kpiWeekDiff').textContent = wd<0?'▼ abgenommen':wd>0?'▲ zugenommen':'= stabil';
+    el('kpiWeekDiff').className = 'kdiff '+(wd<0?'diff-neg':wd>0?'diff-pos':'diff-neu');
+  }
+
+  // Gewicht page
+  set('wKpiAkt', lat.weight_kg.toFixed(1));
+  set('wKpiTotal', Math.abs(diff).toFixed(1));
+  if(weightData.length>=2){
+    const prev = weightData[weightData.length-2];
+    const yd = parseFloat((lat.weight_kg-prev.weight_kg).toFixed(1));
+    set('wKpiYest', lat.weight_kg.toFixed(1));
+    el('wKpiYestDiff').textContent = (yd>0?'+':'')+yd.toFixed(1)+' kg';
+    el('wKpiYestDiff').className = 'kdiff '+(yd<0?'diff-neg':yd>0?'diff-pos':'diff-neu');
+  }
+}
+
+function updateAvgKcal() {
+  if(!kcalHistory.length) return;
+  const last7 = kcalHistory.slice(-7);
+  const avg = Math.round(last7.reduce((s,e)=>s+Number(e.total_kcal),0)/last7.length);
+  set('kpiAvgKcal', avg.toLocaleString('de-DE'));
+}
+
+/* ── CHARTS ── */
+function setMode(m, btn){
+  chartMode=m;
+  el('modeTabs').querySelectorAll('.chart-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  buildMainChart();
+}
+function setRange(r, btn){
+  chartRange=r;
+  el('rangeTabs').querySelectorAll('.chart-tab').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  buildMainChart();
+}
+
+function inRange(arr, dateKey){
+  const cut = new Date(); cut.setDate(cut.getDate()-chartRange);
+  const s = cut.toISOString().split('T')[0];
+  return arr.filter(e=>e[dateKey]>=s);
+}
+
+function fmtD(d){ return new Date(d+'T12:00:00').toLocaleDateString('de-DE',{day:'numeric',month:'short'}); }
+function fmtDL(d){ return new Date(d+'T12:00:00').toLocaleDateString('de-DE',{weekday:'short',day:'numeric',month:'short'}); }
+
+function buildMainChart(){
+  const ws = inRange(weightData,'entry_date');
+  const ks = inRange(kcalHistory,'summary_date');
+  const dates = [...new Set([...ws.map(e=>e.entry_date),...ks.map(e=>e.summary_date)])].sort();
+  const wm = Object.fromEntries(ws.map(e=>[e.entry_date,e.weight_kg]));
+  const km = Object.fromEntries(ks.map(e=>[e.summary_date,Number(e.total_kcal)]));
+
+  const labels = dates.map(fmtD);
+  const ds = [];
+
+  if(chartMode==='gewicht'||chartMode==='beide'){
+    ds.push({label:'Gewicht (kg)',data:dates.map(d=>wm[d]||null),borderColor:'#1a6b3c',backgroundColor:'rgba(26,107,60,0.07)',tension:0.35,pointRadius:4,pointBackgroundColor:'#1a6b3c',fill:true,yAxisID:'yW',spanGaps:true});
+  }
+  if(chartMode==='kcal'||chartMode==='beide'){
+    ds.push({label:'Kalorien (kcal)',data:dates.map(d=>km[d]||null),borderColor:'#d4830a',backgroundColor:'rgba(212,131,10,0.06)',tension:0.35,pointRadius:4,pointBackgroundColor:'#d4830a',fill:true,yAxisID:'yK',spanGaps:true});
+  }
+
+  const scales = {x:{ticks:{font:{size:11},color:'#8a9e8f',maxTicksLimit:8},grid:{display:false}}};
+  if(chartMode==='gewicht'||chartMode==='beide'){
+    scales.yW={type:'linear',position:'left',ticks:{font:{size:11},color:'#8a9e8f',callback:v=>v+' kg'},grid:{color:'rgba(0,0,0,0.05)'}};
+  }
+  if(chartMode==='kcal'||chartMode==='beide'){
+    scales.yK={type:'linear',position:chartMode==='beide'?'right':'left',ticks:{font:{size:11},color:'#8a9e8f',callback:v=>v+' kcal'},grid:{drawOnChartArea:chartMode!=='beide'}};
+  }
+
+  const ctx = el('mainChart').getContext('2d');
+  if(mainChartObj) mainChartObj.destroy();
+  mainChartObj = new Chart(ctx,{
+    type:'line',data:{labels,datasets:ds},
+    options:{responsive:true,maintainAspectRatio:false,interaction:{mode:'index',intersect:false},
+      plugins:{legend:{display:ds.length>1,labels:{font:{size:12},boxWidth:12}}},scales}
+  });
+}
+
+function buildSmallChart(){
+  const ws = weightData.slice(-30);
+  const ctx = el('weightChartSmall').getContext('2d');
+  if(smallChartObj) smallChartObj.destroy();
+  smallChartObj = new Chart(ctx,{
+    type:'line',
+    data:{labels:ws.map(e=>fmtD(e.entry_date)),datasets:[{data:ws.map(e=>e.weight_kg),borderColor:'#7c3aed',backgroundColor:'rgba(124,58,237,0.07)',tension:0.35,pointRadius:4,pointBackgroundColor:'#7c3aed',fill:true}]},
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{x:{ticks:{font:{size:11},color:'#8a9e8f',maxTicksLimit:6},grid:{display:false}},
+              y:{ticks:{font:{size:11},color:'#8a9e8f',callback:v=>v+' kg'},grid:{color:'rgba(0,0,0,0.05)'}}}}
+  });
+}
+
+/* ── RENDER LISTS ── */
+function renderWeightHistory(){
+  const e = el('weightHistoryList');
+  const rows = [...weightData].reverse().slice(0,10);
+  if(!rows.length){ e.innerHTML='<div class="empty-state"><div class="leaf">⚖️</div><p>Noch keine Gewichtsdaten.</p></div>'; return; }
+  e.innerHTML = rows.map((r,i)=>{
+    const p=rows[i+1];
+    let dh='';
+    if(p){ const d=parseFloat((r.weight_kg-p.weight_kg).toFixed(1)); const c=d<0?'wh-diff-neg':d>0?'wh-diff-pos':'wh-diff-neu'; dh=`<span class="${c}">${d>0?'+':''}${d} kg</span>`; }
+    return `<div class="wh-item"><span class="wh-date">${fmtDL(r.entry_date)}</span><span style="display:flex;gap:.75rem;align-items:center">${dh}<span class="wh-kg">${r.weight_kg.toFixed(1)} kg</span></span></div>`;
+  }).join('');
+}
+
+function renderWeightFull(){
+  const e = el('weightFullList');
+  const rows = [...weightData].reverse();
+  if(!rows.length){ e.innerHTML='<div class="empty-state"><div class="leaf">⚖️</div><p>Noch keine Messungen.</p></div>'; return; }
+  e.innerHTML = rows.map((r,i)=>{
+    const p=rows[i+1];
+    let dh='';
+    if(p){ const d=parseFloat((r.weight_kg-p.weight_kg).toFixed(1)); const c=d<0?'wh-diff-neg':d>0?'wh-diff-pos':'wh-diff-neu'; dh=`<span class="${c}">${d>0?'+':''}${d} kg</span>`; }
+    return `<div class="wh-item"><span class="wh-date">${fmtDL(r.entry_date)}</span><span style="display:flex;gap:.75rem;align-items:center">${dh}<span class="wh-kg">${r.weight_kg.toFixed(1)} kg</span></span></div>`;
+  }).join('');
+}
+
+/* ── FOOD AI ── */
+async function analyzeFood(text){
+  const res = await fetch('https://openrouter.ai/api/v1/chat/completions',{
+    method:'POST',
+    headers:{'Authorization':'Bearer '+OPENROUTER_KEY,'Content-Type':'application/json','HTTP-Referer':'https://mama-ernaehrung.app','X-Title':'Mama Ernaehrung'},
+    body:JSON.stringify({
+      model:'deepseek/deepseek-v3-0324:free',
+      messages:[{role:'user',content:`Analysiere folgende Lebensmittelangabe. Antworte NUR mit JSON (kein Markdown, keine Erklärung):\n{"calories":<kcal>,"protein":<g>,"carbs":<g>,"fat":<g>,"fiber":<g>}\n\nLebensmittel: "${text}"`}],
+      temperature:0.1,max_tokens:120
+    })
+  });
+  if(!res.ok) throw new Error('OpenRouter: '+await res.text());
+  const d = await res.json();
+  let raw = d.choices[0].message.content.trim().replace(/```json|```/g,'').trim();
+  const m = raw.match(/\{[\s\S]*?\}/);
+  if(!m) throw new Error('Ungültige KI-Antwort');
+  return JSON.parse(m[0]);
+}
+
+async function addEntry(){
+  const inp = el('foodInput');
+  const text = inp.value.trim();
+  if(!text) return;
+  if(OPENROUTER_KEY==='DEIN_OPENROUTER_API_KEY_HIER'){ el('errorMsg').textContent='Bitte zuerst den OpenRouter API-Key eintragen!'; return; }
+  setLoad(true); el('errorMsg').textContent='';
+  try {
+    const mac = await analyzeFood(text);
+    const saved = await sb('nutrition_entries',{method:'POST',body:JSON.stringify({entry_date:today,description:text,...mac})});
+    entries.push(saved[0]); inp.value='';
+    renderEntries(); updateProgress(); await syncKcal();
+    setLoad(false,'✓ Eingetragen!');
+    setTimeout(()=>setLoad(false,'KI analysiert Nährwerte automatisch'),2000);
+  } catch(e){
+    el('errorMsg').textContent='Fehler: '+(e.message||e);
+    setLoad(false,'KI analysiert Nährwerte automatisch');
+  }
+}
+
+function setLoad(on,hint){
+  el('addBtn').disabled=on;
+  el('spinner').style.display=on?'block':'none';
+  if(hint) el('hintText').textContent=hint;
+  else if(on) el('hintText').textContent='KI schaut nach …';
+}
+
+async function handleDelete(id){
+  try {
+    await sb(`nutrition_entries?id=eq.${id}`,{method:'DELETE',headers:{'Prefer':''}});
+    entries=entries.filter(e=>e.id!==id);
+    renderEntries(); updateProgress(); await syncKcal();
+  } catch(e){ alert('Löschen fehlgeschlagen'); }
+}
+
+const EMMAP={'ei':'🥚','egg':'🥚','salat':'🥗','gemüse':'🥗','hähnchen':'🥩','fleisch':'🥩','steak':'🥩','brot':'🍞','brötchen':'🍞','apfel':'🍎','banane':'🍎','obst':'🍎','käse':'🧀','milch':'🥛','joghurt':'🥛','nudel':'🍜','pasta':'🍜','reis':'🍚','beere':'🫐','nuss':'🥜','suppe':'🍲','fisch':'🐟','quark':'🥛','müsli':'🥣','haferflocken':'🥣'};
+function femoji(d){ const l=d.toLowerCase(); for(const[k,v] of Object.entries(EMMAP)) if(l.includes(k)) return v; return['🥗','🍳','🥩','🍎','🍞','🥛','🍜','🥚'][Math.floor(Math.random()*8)]; }
+
+function renderEntries(){
+  const list=el('entriesList');
+  if(!entries.length){ list.innerHTML='<div class="empty-state"><div class="leaf">🥗</div><p>Noch keine Einträge heute.<br>Trag auf, was du gegessen hast!</p></div>'; return; }
+  list.innerHTML=entries.map(e=>`
+    <div class="entry-item">
+      <div class="entry-icon">${femoji(e.description)}</div>
+      <div class="entry-body">
+        <div class="entry-desc">${esc(e.description)}</div>
+        <div class="entry-macros">
+          <span class="macro-pill pill-kcal">${Math.round(e.calories)} kcal</span>
+          <span class="macro-pill pill-protein">${Math.round(e.protein)}g Eiweiß</span>
+          <span class="macro-pill pill-carbs">${Math.round(e.carbs)}g KH</span>
+          <span class="macro-pill pill-fat">${Math.round(e.fat)}g Fett</span>
+          ${e.fiber>0?`<span class="macro-pill pill-fiber">${Math.round(e.fiber)}g Bst.</span>`:''}
+        </div>
+      </div>
+      <button class="entry-delete" onclick="handleDelete('${e.id}')" title="Löschen">✕</button>
+    </div>`).join('');
+}
+
+function updateProgress(){
+  const t=entries.reduce((a,e)=>({kcal:a.kcal+(e.calories||0),protein:a.protein+(e.protein||0),carbs:a.carbs+(e.carbs||0),fat:a.fat+(e.fat||0),fiber:a.fiber+(e.fiber||0)}),{kcal:0,protein:0,carbs:0,fat:0,fiber:0});
+  set('pKcal',Math.round(t.kcal).toLocaleString('de-DE'));
+  set('pProtein',Math.round(t.protein)); set('pCarbs',Math.round(t.carbs));
+  set('pFat',Math.round(t.fat)); set('pFiber',Math.round(t.fiber));
+  const pct=Math.min((t.kcal/ZIEL)*100,100);
+  el('barKcal').style.width=pct+'%';
+  const w=el('kcalWarning');
+  if(t.kcal>ZIEL){ w.style.display='block'; w.textContent=`⚠️ Tagesziel um ${Math.round(t.kcal-ZIEL)} kcal überschritten!`; el('barKcal').style.background='var(--red)'; }
+  else{ w.style.display='none'; el('barKcal').style.background='var(--gd)'; }
+  bar('barProtein',t.protein,100); bar('barCarbs',t.carbs,200); bar('barFat',t.fat,70); bar('barFiber',t.fiber,30);
+}
+function bar(id,v,max){ el(id).style.width=Math.min((v/max)*100,100)+'%'; }
+
+el('foodInput').addEventListener('keydown',e=>{ if(e.key==='Enter') addEntry(); });
+el('weightInput').addEventListener('keydown',e=>{ if(e.key==='Enter') saveWeight(); });
+
+loadAll();
+</script>
+</body>
+</html>
